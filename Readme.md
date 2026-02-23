@@ -6,10 +6,10 @@ Proyek ini adalah analisis data Bike Sharing yang dikembangkan menjadi
 **dashboard interaktif berbasis Streamlit** untuk mengeksplorasi pola
 penyewaan sepeda.
 
-Fokus utama proyek: - Analisis pola penyewaan berdasarkan **musim** -
-Perbandingan penggunaan antara **casual vs registered users** -
-Identifikasi **jam sibuk (peak hours)** pada hari kerja dan hari libur
-
+Fokus utama proyek: 
+- Analisis pola penyewaan berdasarkan **musim**
+- Perbandingan penggunaan antara **casual vs registered users**
+- Identifikasi **jam sibuk (peak hours)** pada hari kerja dan hari libur
 Dashboard ini dirancang untuk membantu memahami pola permintaan sepeda
 secara cepat dan visual.
 
