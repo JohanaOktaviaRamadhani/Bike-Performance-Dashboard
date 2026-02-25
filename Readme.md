@@ -1,6 +1,6 @@
 # 🚲 Bike Sharing Analysis & Interactive Dashboard
 
-## 📌 Tentang Proyek
+## Tentang Proyek
 
 Proyek ini adalah analisis data Bike Sharing yang dikembangkan menjadi
 **dashboard interaktif berbasis Streamlit** untuk mengeksplorasi pola
@@ -15,22 +15,22 @@ secara cepat dan visual.
 
 ------------------------------------------------------------------------
 
-## 🚀 Cara Menjalankan
+## Cara Menjalankan
 
-### 1️⃣ Clone / Download Repository
+### 1️. Clone / Download Repository
 
 Pastikan Python sudah terinstall di perangkat Anda.
 
     git clone <repository-url>
     cd <repository-folder>
 
-### 2️⃣ Install Dependencies
+### 2️. Install Dependencies
 
 Install semua library yang dibutuhkan:
 
     pip install -r requirements.txt
 
-### 3️⃣ Jalankan Dashboard
+### 3️. Jalankan Dashboard
 
 Masuk ke folder utama proyek, lalu jalankan:
 
