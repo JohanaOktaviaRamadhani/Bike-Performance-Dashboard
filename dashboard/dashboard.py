@@ -11,6 +11,11 @@ def load_data():
     df = pd.read_csv("dashboard/main_data.csv")
     df['dteday'] = pd.to_datetime(df['dteday'])
     
+    # --- PROSES BINNING---
+    bins = [0, 0.4, 0.7, 1]
+    labels = ['Sangat Dingin', 'Nyaman', 'Panas']
+    df['temp_category'] = pd.cut(df['temp'], bins=bins, labels=labels)
+    
     season_order = ['Spring', 'Summer', 'Fall', 'Winter']
     df['season'] = pd.Categorical(df['season'], categories=season_order, ordered=True)
     
@@ -24,14 +29,38 @@ all_df = load_data()
 with st.sidebar:
     st.title("🚲 Bike Analysis")
     st.write(f"Halo, **Johana!**")
+    
     min_date, max_date = all_df["dteday"].min(), all_df["dteday"].max()
     try:
-        selected_dates = st.date_input(label='Rentang Waktu', min_value=min_date, max_value=max_date, value=[min_date, max_date])
-        start_date, end_date = selected_dates if len(selected_dates) == 2 else (min_date, max_date)
-    except:
-        start_date, end_date = min_date, max_date
+        selected_dates = st.date_input(
+            label='Rentang Waktu',
+            min_value=min_date,
+            max_value=max_date,
+            value=[min_date, max_date]
+        )
+        if len(selected_dates) == 2:
+            start_date, end_date = selected_dates
+        else:
+            st.warning("Silakan pilih rentang tanggal lengkap (Mulai & Selesai)")
+            st.stop()
+    except Exception as e:
+        st.error(f"Terjadi kesalahan input tanggal: {e}")
+        st.stop()
 
-main_df = all_df[(all_df["dteday"] >= pd.to_datetime(start_date)) & (all_df["dteday"] <= pd.to_datetime(end_date))]
+    # --- Filter Kategori Suhu ---
+    temp_options = all_df['temp_category'].unique().tolist()
+    selected_temp = st.multiselect(
+        label="Pilih Kategori Suhu",
+        options=temp_options,
+        default=temp_options
+    )
+
+# Filtering data utama
+main_df = all_df[
+    (all_df["dteday"] >= pd.to_datetime(start_date)) & 
+    (all_df["dteday"] <= pd.to_datetime(end_date)) &
+    (all_df["temp_category"].isin(selected_temp))
+]
 
 st.title("📊 Bike Sharing Performance Dashboard")
 m1, m2, m3 = st.columns(3)
@@ -48,7 +77,6 @@ with col1:
     season_df = main_df.groupby('season', observed=True)[['casual', 'registered']].sum().reset_index()
     fig, ax = plt.subplots(figsize=(10, 8))
     
-    # Biru untuk Registered, Kuning untuk Casual
     ax.bar(season_df['season'], season_df['registered'], label='Registered', color='#1f77b4')
     ax.bar(season_df['season'], season_df['casual'], bottom=season_df['registered'], label='Casual', color='#FFD700')
     ax.legend()
@@ -60,37 +88,58 @@ with col2:
     hourly_df['Hari'] = hourly_df['workingday'].map({1: 'Hari Kerja', 0: 'Hari Libur'})
     
     fig2, ax2 = plt.subplots(figsize=(10, 8))
-    # Palette Biru dan Kuning
     sns.lineplot(data=hourly_df, x='hr', y='cnt', hue='Hari', palette=['#FFD700', '#1f77b4'], ax=ax2, linewidth=3)
     ax2.set_xticks(range(0, 24))
     st.pyplot(fig2)
 
-st.divider()
-st.subheader("Analisis Berdasarkan Kategori Waktu")
 
-category_summary = main_df.groupby('time_category', observed=True)['cnt'].mean().reset_index()
-fig3, ax3 = plt.subplots(figsize=(12, 5))
-# Highlight Peak dengan Biru, lainnya Kuning
-colors = ['#1f77b4' if 'Peak' in cat else '#FFD700' for cat in category_summary['time_category']]
+c_alt1, c_alt2 = st.columns(2)
 
-sns.barplot(x='time_category', y='cnt', data=category_summary, palette=colors, ax=ax3)
+# Penggunaan Berdasarkan Kategori Waktu
+with c_alt1:
+    st.write("#### Total Penyewaan per Kategori Waktu")
+    category_summary = main_df.groupby('time_category', observed=True)['cnt'].sum().reset_index()
+    
+    fig3, ax3 = plt.subplots(figsize=(10, 6))
+    colors = ['#D62728' if 'Peak' in cat else '#1F77B4' for cat in category_summary['time_category']]
+    
+    sns.barplot(x='time_category', y='cnt', data=category_summary, palette=colors, ax=ax3)
+    sns.despine() 
+    for p in ax3.patches:
+        ax3.annotate(f'{p.get_height():.0f}', 
+                     (p.get_x() + p.get_width() / 2., p.get_height()), 
+                     ha='center', va='bottom', fontsize=10, fontweight='bold')
+    
+    ax3.set_ylabel("Total Penyewaan")
+    ax3.set_xlabel("Kategori Waktu")
+    st.pyplot(fig3)
 
-for p in ax3.patches:
-    ax3.annotate(f'{p.get_height():.0f}', (p.get_x() + p.get_width() / 2., p.get_height()), ha='center', va='bottom')
+# Kategori Suhu (Advanced Analysis Highlight)
+with c_alt2:
+    st.write("#### Efek Suhu terhadap Rata-rata Penyewaan")
+    st.info("💡 **Advanced Analysis**: Mengelompokkan suhu mentah menjadi kategori persepsi manusia.")
+    
+    temp_analysis = main_df.groupby('temp_category', observed=True)['cnt'].mean().reset_index()
+    fig_temp, ax_temp = plt.subplots(figsize=(10, 6))
+    
+    sns.barplot(data=temp_analysis, x='temp_category', y='cnt', palette='coolwarm', ax=ax_temp)
+    sns.despine()
+    
+    ax_temp.set_ylabel("Rata-rata Penyewaan")
+    st.pyplot(fig_temp)
 
-st.pyplot(fig3)
 st.divider()
 with st.expander("Lihat Detail Kesimpulan & Rekomendasi Bisnis"):
     c1, c2 = st.columns(2)
     with c1:
         st.write("### **Insight Musiman & Pengguna**")
         st.write("""
-        * Dominasi Biru (Registered): Pengguna loyal tetap menjadi tulang punggung bisnis dengan kontribusi konsisten di atas 75% di semua musim.
-        * Potensi Kuning (Casual):Kontribusi tertinggi pengguna Casual terlihat pada musim Summer & Fall. Ini adalah momen tepat untuk menawarkan daily pass atau promo rekreasi.
+        * **Dominasi Registered**: Pengguna loyal tetap konsisten di atas 75%.
+        * **Potensi Casual**: Melonjak pada musim Summer & Fall serta pada kategori suhu **'Nyaman'** dan **'Panas'**.
         """)
     with c2:
-        st.write("### **Strategi Operasional & Waktu**")
+        st.write("### **Strategi Operasional**")
         st.write("""
-        * Manajemen Peak (Biru): Grafik menunjukkan lonjakan tajam pada jam berangkat (08:00) dan pulang kantor (17:00). Pastikan ketersediaan sepeda maksimal di titik transit pada jam tersebut.
-        * Manajemen Mid-day (Kuning): Pada hari libur, penyewaan terpusat di tengah hari. Distribusi armada harus digeser ke area taman dan pusat hiburan mulai pukul 10:00 pagi.
+        * **Optimalisasi Suhu**: Pada kategori suhu 'Panas', permintaan berada di titik tertinggi. Pastikan stok sepeda penuh di lokasi wisata.
+        * **Manajemen Peak**: Fokus pada jam 08:00 dan 17:00 untuk pengguna komuter.
         """)
