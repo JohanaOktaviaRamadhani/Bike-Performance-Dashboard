@@ -11,7 +11,7 @@ def load_data():
     df = pd.read_csv("dashboard/main_data.csv")
     df['dteday'] = pd.to_datetime(df['dteday'])
     
-    # --- PROSES BINNING---
+    # proses binning suhu untuk analisis lanjutan
     bins = [0, 0.4, 0.7, 1]
     labels = ['Sangat Dingin', 'Nyaman', 'Panas']
     df['temp_category'] = pd.cut(df['temp'], bins=bins, labels=labels)
@@ -47,7 +47,7 @@ with st.sidebar:
         st.error(f"Terjadi kesalahan input tanggal: {e}")
         st.stop()
 
-    # --- Filter Kategori Suhu ---
+    #Filter Kategori Suhu
     temp_options = all_df['temp_category'].unique().tolist()
     selected_temp = st.multiselect(
         label="Pilih Kategori Suhu",
@@ -92,8 +92,7 @@ with col2:
     ax2.set_xticks(range(0, 24))
     st.pyplot(fig2)
 
-
-c_alt1, c_alt2 = st.columns(2)
+    c_alt1, c_alt2 = st.columns(2)
 
 # Penggunaan Berdasarkan Kategori Waktu
 with c_alt1:
@@ -101,10 +100,10 @@ with c_alt1:
     category_summary = main_df.groupby('time_category', observed=True)['cnt'].sum().reset_index()
     
     fig3, ax3 = plt.subplots(figsize=(10, 6))
-    colors = ['#D62728' if 'Peak' in cat else '#1F77B4' for cat in category_summary['time_category']]
+    colors = ["#F1F820" if 'Peak' in cat else '#1F77B4' for cat in category_summary['time_category']]
     
     sns.barplot(x='time_category', y='cnt', data=category_summary, palette=colors, ax=ax3)
-    sns.despine() 
+    sns.despine()
     for p in ax3.patches:
         ax3.annotate(f'{p.get_height():.0f}', 
                      (p.get_x() + p.get_width() / 2., p.get_height()), 
@@ -114,7 +113,7 @@ with c_alt1:
     ax3.set_xlabel("Kategori Waktu")
     st.pyplot(fig3)
 
-# Kategori Suhu (Advanced Analysis Highlight)
+# Kategori Suhu 
 with c_alt2:
     st.write("#### Efek Suhu terhadap Rata-rata Penyewaan")
     st.info("💡 **Advanced Analysis**: Mengelompokkan suhu mentah menjadi kategori persepsi manusia.")
