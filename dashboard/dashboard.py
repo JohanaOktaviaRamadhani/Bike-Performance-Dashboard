@@ -114,9 +114,7 @@ with c_alt1:
 
 # Kategori Suhu 
 with c_alt2:
-    st.write("#### Efek Suhu terhadap Rata-rata Penyewaan")
-    st.info("💡 **Advanced Analysis**: Mengelompokkan suhu mentah menjadi kategori persepsi manusia.")
-    
+    st.write("#### Efek Suhu terhadap Rata-rata Penyewaan")    
     temp_analysis = main_df.groupby('temp_category', observed=True)['cnt'].mean().reset_index()
     fig_temp, ax_temp = plt.subplots(figsize=(10, 6))
     
