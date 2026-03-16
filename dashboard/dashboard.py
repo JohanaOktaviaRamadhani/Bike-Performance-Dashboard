@@ -92,15 +92,14 @@ with col2:
     ax2.set_xticks(range(0, 24))
     st.pyplot(fig2)
 
-    c_alt1, c_alt2 = st.columns(2)
-
+c_alt1, c_alt2 = st.columns(2)
 # Penggunaan Berdasarkan Kategori Waktu
 with c_alt1:
     st.write("#### Total Penyewaan per Kategori Waktu")
     category_summary = main_df.groupby('time_category', observed=True)['cnt'].sum().reset_index()
     
     fig3, ax3 = plt.subplots(figsize=(10, 6))
-    colors = ["#F1F820" if 'Peak' in cat else '#1F77B4' for cat in category_summary['time_category']]
+    colors = ["#FFD700" if 'Peak' in cat else '#1F77B4' for cat in category_summary['time_category']]
     
     sns.barplot(x='time_category', y='cnt', data=category_summary, palette=colors, ax=ax3)
     sns.despine()
